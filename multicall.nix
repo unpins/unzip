@@ -80,34 +80,13 @@ let
           $OBJCOPY --redefine-syms="multicall/$t.redef" "multicall/$t.o"
       done
 
-      # Dispatcher: funzip by argv[0]; everything else → unzip_main with the
-      # ORIGINAL argv preserved, so unzip's own argv[0] check still recognises
-      # `zipinfo`. (No `unzip <applet>` form — unzip takes no applet arg.)
-      {
-        cat <<'CHEAD'
-#include <string.h>
-#include <stdio.h>
-int unzip_main(int, char **);
-int funzip_main(int, char **);
-static void base_of(char *dst, size_t cap, const char *src) {
-    const char *p = src, *s;
-    s = strrchr(p, '/'); if (s) p = s + 1;
-#ifdef _WIN32
-    s = strrchr(p, '\\'); if (s) p = s + 1;
-#endif
-    size_t n = strlen(p); if (n >= cap) n = cap - 1;
-    memcpy(dst, p, n); dst[n] = 0;
-    if (n > 4 && strcmp(dst + n - 4, ".exe") == 0) dst[n - 4] = 0;
-}
-int main(int argc, char **argv) {
-    char base[64];
-    const char *a0 = (argc > 0 && argv[0]) ? argv[0] : "unzip";
-    base_of(base, sizeof base, a0);
-    if (strcmp(base, "funzip") == 0) return funzip_main(argc, argv);
-    return unzip_main(argc, argv);
-}
-CHEAD
-      } > multicall/dispatcher.c
+      # Dispatcher (shared canonical generator — see nix-lib
+      # lib.multicallDispatcherC). apps.list carries the two real mains; `funzip`
+      # matches as an applet, while `zipinfo` is NOT an applet — it falls through
+      # to unzip (defaultApplet) with the original argv, so unzip's own argv[0]
+      # self-detection still kicks in.
+      printf '%s\n' $TOOLS > multicall/apps.list
+${lib.multicallDispatcherC { name = "unzip"; defaultApplet = "unzip"; }}
       $CC -O2 -c -o multicall/dispatcher.o multicall/dispatcher.c
 
       # Final link: cc-wrapper adds -static (pkgsStatic/cosmo) and -lbz2

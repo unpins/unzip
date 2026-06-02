@@ -17,23 +17,14 @@
   outputs = { self, unpins-lib }:
     let
       ulib = unpins-lib.lib;
-      pkgsX = unpins-lib.inputs.nixpkgs.legacyPackages.x86_64-linux;
-      # The Windows binary's man comes from a graft of nixpkgs' unzip, whose
-      # share/man carries all five pages (unzip/funzip/zipinfo + unzipsfx +
-      # zipgrep). We ship only unzip/funzip/zipinfo, so pin a curated three-page
-      # tree (the native side already curates its own man in the multicall
-      # installPhase).
-      winMan = pkgsX.runCommand "unzip-win-man" { } ''
-        mkdir -p "$out/share/man/man1"
-        for p in unzip funzip zipinfo; do
-          zcat ${pkgsX.unzip}/share/man/man1/$p.1.gz > "$out/share/man/man1/$p.1"
-        done
-      '';
     in
     ulib.mkStandaloneFlake {
       inherit self;
       name = "unzip";
-      winManRoot = winMan;
+      # No winManRoot: the shared multicall.nix installPhase curates the man to
+      # the three shipped applets (unzip/funzip/zipinfo, dropping unzipsfx.1/
+      # zipgrep.1) into $out/share/man on EVERY target — the cosmo .exe included
+      # — so each build harvests its OWN man, no graft.
       smoke = [ "-v" ];
       smokePattern = "Info-ZIP";
       build = pkgs:

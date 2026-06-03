@@ -9,21 +9,22 @@ Standalone build of [Info-ZIP unzip](https://infozip.sourceforge.net/UnZip.html)
 
 Part of the [unpins](https://unpins.org) project — native single-binary builds with no third-party runtime dependencies.
 
-## Installation
+## Usage
 
-Install with [unpin](https://github.com/unpins/unpin):
-
-```bash
-unpin unzip
-```
-
-Or run without installing:
+Run a program with [unpin](https://github.com/unpins/unpin):
 
 ```bash
-unpin run unzip
+unpin unzip archive.zip
+unpin unzip zipinfo archive.zip
 ```
 
-`unpin install` creates the aliases (`funzip`, `zipinfo`) alongside `unzip`. Each dispatches via `argv[0]` to the same binary.
+To install the programs onto your PATH:
+
+```bash
+unpin install unzip
+```
+
+`unpin install unzip` also creates the `funzip`, `zipinfo` commands.
 
 ## Build locally
 

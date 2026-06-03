@@ -29,7 +29,19 @@
       smokePattern = "Info-ZIP";
       build = pkgs:
         import ./multicall.nix { lib = pkgs.lib // ulib; }
-          { inherit pkgs; unzip = pkgs.pkgsStatic.unzip; };
+          {
+            inherit pkgs;
+            # unzip's i386 asm (crc_i386.S) omits the `.note.GNU-stack` marker,
+            # so its objects request an executable stack. lld (the unpins
+            # default linker, strict since 21) then aborts the i686 multicall
+            # link with "requires an executable stack, but -z execstack is not
+            # specified" — and an output `-z noexecstack` does NOT silence an
+            # exec-stack INPUT. unzip never executes stack code, so assemble
+            # with a non-exec GNU-stack note. Harmless on the asm-free arches.
+            unzip = pkgs.pkgsStatic.unzip.overrideAttrs (o: {
+              NIX_CFLAGS_COMPILE = (o.NIX_CFLAGS_COMPILE or "") + " -Wa,--noexecstack";
+            });
+          };
       windowsBuild = pkgs:
         let
           # unzip's unxcfg.h only pulls <utime.h> for linux/glibc/BSD4_4;

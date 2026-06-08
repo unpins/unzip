@@ -1,13 +1,13 @@
 # unzip
 
-Standalone build of [Info-ZIP unzip](https://infozip.sourceforge.net/UnZip.html).
+[Info-ZIP unzip](https://infozip.sourceforge.net/UnZip.html) as a single self-contained binary, built natively for Linux, macOS, and Windows.
 
 [![CI](https://github.com/unpins/unzip/actions/workflows/unzip.yml/badge.svg)](https://github.com/unpins/unzip/actions)
 ![Linux](https://img.shields.io/badge/Linux-✓-success?logo=linux&logoColor=white)
 ![macOS](https://img.shields.io/badge/macOS-✓-success?logo=apple&logoColor=white)
 ![Windows](https://img.shields.io/badge/Windows-✓-success?logo=windows&logoColor=white)
 
-Part of the [unpins](https://unpins.org) project — native single-binary builds with no third-party runtime dependencies.
+Part of the [unpins](https://unpins.org) catalog; install it with [`unpin`](https://github.com/unpins/unpin): `unpin install unzip`.
 
 ## Usage
 
@@ -26,6 +26,10 @@ unpin install unzip
 
 `unpin install unzip` also creates the `funzip`, `zipinfo` commands.
 
+## Man pages
+
+The man pages for `unzip`, `funzip` and `zipinfo` are embedded in the binary;
+read one with `unpin man unzip`, e.g. `unpin man unzip zipinfo`.
 ## Build locally
 
 ```bash
@@ -57,7 +61,3 @@ The [Releases](https://github.com/unpins/unzip/releases) page has standalone bin
   rather than mingw: Info-ZIP's `unix/Makefile` is Unix-only. (One Cosmopolitan
   fixup: force-include `<utime.h>` so timestamp restoration compiles.)
 
-## Man pages
-
-The man pages for `unzip`, `funzip` and `zipinfo` are embedded in the binary;
-read one with `unpin man unzip`, e.g. `unpin man unzip zipinfo`.

@@ -1,5 +1,5 @@
 {
-  description = "Standalone build of Info-ZIP unzip";
+  description = "Info-ZIP unzip as a single self-contained binary";
 
   nixConfig = {
     extra-substituters = [ "https://unpins.cachix.org" ];

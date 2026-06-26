@@ -81,12 +81,13 @@ let
       done
 
       # Dispatcher (shared canonical generator — see nix-lib
-      # lib.multicallDispatcherC). apps.list carries the two real mains; `funzip`
-      # matches as an applet, while `zipinfo` is NOT an applet — it falls through
-      # to unzip (defaultApplet) with the original argv, so unzip's own argv[0]
+      # lib.multicallTableDispatcherC). applets.list is a TSV (applet<TAB>symbol;
+      # symbol == applet here) carrying the two real mains; `funzip` matches as an
+      # applet, while `zipinfo` is NOT an applet — it falls through to unzip
+      # (defaultApplet) with the original argv, so unzip's own argv[0]
       # self-detection still kicks in.
-      printf '%s\n' $TOOLS > multicall/apps.list
-${lib.multicallDispatcherC { name = "unzip"; defaultApplet = "unzip"; }}
+      for t in $TOOLS; do printf '%s\t%s\n' "$t" "$t"; done > multicall/applets.list
+${lib.multicallTableDispatcherC { name = "unzip"; defaultApplet = "unzip"; }}
       $CC -O2 -c -o multicall/dispatcher.o multicall/dispatcher.c
 
       # Final link: cc-wrapper adds -static (pkgsStatic/cosmo) and -lbz2

@@ -27,21 +27,35 @@
       # — so each build harvests its OWN man, no graft.
       smoke = [ "-v" ];
       smokePattern = "Info-ZIP";
+
+      # Build via the unpin-llvm engine + emit a bitcode multicall module. The
+      # standalone self-folds unzip + funzip into one dispatcher binary from the
+      # captured module.bc; the old ld-r/objcopy fold in ./multicall.nix can't
+      # run on the engine's -flto bitcode objects, so it's reserved for the
+      # Windows (cosmo) path. Only `unzip` and `funzip` are real binaries —
+      # `zipinfo` is unzip's argv[0] self-dispatch, so it's an alias of unzip.
+      engine = "unpin-llvm";
+      multicall = {
+        programs = [
+          { name = "unzip"; aliases = [ "zipinfo" ]; }
+          { name = "funzip"; }
+        ];
+      };
+      # linux + darwin both self-fold through the engine (bitcode module), like
+      # coreutils — no hand-rolled ld-r/objcopy fold (that recipe is ELF-only
+      # and doesn't port to Mach-O). Windows still uses ./multicall.nix.
       build = pkgs:
-        import ./multicall.nix { lib = pkgs.lib // ulib; }
-          {
-            inherit pkgs;
-            # unzip's i386 asm (crc_i386.S) omits the `.note.GNU-stack` marker,
-            # so its objects request an executable stack. lld (the unpins
-            # default linker, strict since 21) then aborts the i686 multicall
-            # link with "requires an executable stack, but -z execstack is not
-            # specified" — and an output `-z noexecstack` does NOT silence an
-            # exec-stack INPUT. unzip never executes stack code, so assemble
-            # with a non-exec GNU-stack note. Harmless on the asm-free arches.
-            unzip = pkgs.pkgsStatic.unzip.overrideAttrs (o: {
-              NIX_CFLAGS_COMPILE = (o.NIX_CFLAGS_COMPILE or "") + " -Wa,--noexecstack";
-            });
-          };
+        pkgs.pkgsStatic.unzip.overrideAttrs (o:
+          # unzip's i386 asm (crc_i386.S) omits the `.note.GNU-stack` marker, so
+          # its objects request an executable stack. lld (the unpins default
+          # linker, strict since 21) then aborts the i686 multicall link with
+          # "requires an executable stack, but -z execstack is not specified" —
+          # and an output `-z noexecstack` does NOT silence an exec-stack INPUT.
+          # unzip never executes stack code, so assemble with a non-exec
+          # GNU-stack note. ELF-only; the asm-free darwin/Mach-O build skips it.
+          pkgs.lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {
+            NIX_CFLAGS_COMPILE = (o.NIX_CFLAGS_COMPILE or "") + " -Wa,--noexecstack";
+          });
       windowsBuild = pkgs:
         let
           # unzip's unxcfg.h only pulls <utime.h> for linux/glibc/BSD4_4;

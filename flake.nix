@@ -63,6 +63,17 @@
               --replace 'CRC32OA="crc_gcc.o"' 'CRC32OA=""' \
               --replace 'CFLAGSR="''${CFLAGSR} -DASM_CRC"' ':'
           '';
+          # Curate the embedded man to the three shipped applets. nixpkgs unzip
+          # installs pages for unzipsfx (the self-extracting-archive stub) and
+          # zipgrep (a /bin/sh wrapper) — neither of which we ship — so withMan
+          # would embed them. Drop them; keep unzip/funzip/zipinfo. (The windows
+          # multicall.nix already curates the same set.)
+          postInstall = (o.postInstall or "") + ''
+            for _mo in $outputs; do
+              rm -f "''${!_mo}/man/man1"/unzipsfx.1* "''${!_mo}/man/man1"/zipgrep.1* \
+                    "''${!_mo}/share/man/man1"/unzipsfx.1* "''${!_mo}/share/man/man1"/zipgrep.1*
+            done
+          '';
         } // pkgs.lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {
           # unzip's i386 asm omits the `.note.GNU-stack` marker, so its objects
           # request an executable stack; lld (strict since 21) then aborts an i686

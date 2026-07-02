@@ -54,9 +54,11 @@ The [Releases](https://github.com/unpins/unzip/releases) page has standalone bin
 - Single multicall binary. `funzip` (pipe filter) and `zipinfo` (archive
   listing) dispatch by `argv[0]`; `zipinfo` is served by `unzip` itself.
   Dropped: `zipgrep` (a `/bin/sh` wrapper) and `unzipsfx` (a self-extracting
-  stub you concatenate with a zip — incompatible with a single binary).
+  stub you concatenate with a zip — incompatible with a single binary); their
+  man pages are curated out too, so only `unzip`/`funzip`/`zipinfo` pages embed.
 - bzip2-compressed entries are supported (static libbz2 folded in).
 - Built from the nixpkgs unzip, so the full upstream CVE-patch stack is included.
+- **Tests:** Info-ZIP unzip ships no automated `make check` suite, so there is nothing to wire; the release smoke test runs `unzip -v`.
 - **Windows** is built with [Cosmopolitan](https://github.com/jart/cosmopolitan)
   rather than mingw: Info-ZIP's `unix/Makefile` is Unix-only. (One Cosmopolitan
   fixup: force-include `<utime.h>` so timestamp restoration compiles.)

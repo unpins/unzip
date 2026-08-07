@@ -81,12 +81,14 @@ let
       done
 
       # Dispatcher (shared canonical generator — see nix-lib
-      # lib.multicallTableDispatcherC). applets.list is a TSV (applet<TAB>symbol;
-      # symbol == applet here) carrying the two real mains; `funzip` matches as an
-      # applet, while `zipinfo` is NOT an applet — it falls through to unzip
-      # (defaultApplet) with the original argv, so unzip's own argv[0]
-      # self-detection still kicks in.
+      # lib.multicallTableDispatcherC). applets.list is a TSV (applet<TAB>symbol)
+      # and is many-to-one, so `zipinfo` is an extra row at unzip's symbol: argv[0]
+      # reaches unzip's main exactly as before (it self-detects), and
+      # `--unpin-program=zipinfo` now reaches it too — the dispatcher rewrites
+      # argv[0] to the selected name. Leaving it out made the two vias disagree on
+      # windows while the native nix-lib table (which lists aliases) accepted both.
       for t in $TOOLS; do printf '%s\t%s\n' "$t" "$t"; done > multicall/applets.list
+      printf 'zipinfo\tunzip\n' >> multicall/applets.list
 ${lib.multicallTableDispatcherC { name = "unzip"; defaultApplet = "unzip"; }}
       $CC -O2 -c -o multicall/dispatcher.o multicall/dispatcher.c
 

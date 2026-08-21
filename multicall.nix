@@ -26,7 +26,7 @@
 # Shared by the native `build` (pkgsStatic ELF / Mach-O) and `windowsBuild`
 # (Cosmopolitan APE) paths.
 { lib }:
-{ pkgs, unzip }:
+{ pkgs, unzip, winTable }:
 let
   isDarwin = pkgs.stdenv.hostPlatform.isDarwin or false;
   isWindows = pkgs.stdenv.hostPlatform.isWindows or false;
@@ -80,16 +80,13 @@ let
           $OBJCOPY --redefine-syms="multicall/$t.redef" "multicall/$t.o"
       done
 
-      # Dispatcher (shared canonical generator — see nix-lib
-      # lib.multicallTableDispatcherC). applets.list is a TSV (applet<TAB>symbol)
-      # and is many-to-one, so `zipinfo` is an extra row at unzip's symbol: argv[0]
-      # reaches unzip's main exactly as before (it self-detects), and
-      # `--unpin-program=zipinfo` now reaches it too — the dispatcher rewrites
-      # argv[0] to the selected name. Leaving it out made the two vias disagree on
-      # windows while the native nix-lib table (which lists aliases) accepted both.
-      for t in $TOOLS; do printf '%s\t%s\n' "$t" "$t"; done > multicall/applets.list
-      printf 'zipinfo\tunzip\n' >> multicall/applets.list
-${lib.multicallTableDispatcherC { name = "unzip"; defaultApplet = "unzip"; }}
+      # applets.list + dispatcher.c, both rendered from the ONE table the flake
+      # declares. The table is many-to-one, so `zipinfo` is an extra row at
+      # unzip's symbol: argv[0] reaches unzip's main exactly as before (it
+      # self-detects) and `--unpin-program=zipinfo` reaches it too. `unzip` is
+      # itself a program, so the table's naming rule runs it on a bare
+      # invocation — the same rule the native fold reads, not a second copy.
+${winTable.emit { }}
       $CC -O2 -c -o multicall/dispatcher.o multicall/dispatcher.c
 
       # Final link: cc-wrapper adds -static (pkgsStatic/cosmo) and -lbz2
@@ -116,7 +113,10 @@ ${lib.multicallTableDispatcherC { name = "unzip"; defaultApplet = "unzip"; }}
   aliased = lib.withAliases pkgs
     {
       primary = "unzip";
-      aliasesFromSymlinksIn = "bin";
+      # The dispatcher's whole table, not the symlinks it happens to have made:
+      # harvesting dropped `unzip` itself and shipped a list one name shorter
+      # than what the binary answers to.
+      aliases = winTable.announced;
     }
     multicall;
 in

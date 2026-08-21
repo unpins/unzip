@@ -17,6 +17,17 @@
   outputs = { self, unpins-lib }:
     let
       ulib = unpins-lib.lib;
+      # The windows fold's whole dispatch table, declared once: ./multicall.nix
+      # renders applets.list and the dispatcher from it, `withAliases` announces
+      # it, and `multicall.windowsTable` hands the same value to CI. `zipinfo`
+      # is an extra row at unzip's own main (unzip self-detects on argv[0]), and
+      # `unzip` is in the table because the binary answers to it — which is also
+      # what makes a bare `unzip.exe` extract instead of listing.
+      programs = [
+        { name = "unzip"; aliases = [ "zipinfo" ]; }
+        { name = "funzip"; }
+      ];
+      winTable = ulib.multicallTableOf { name = "unzip"; inherit programs; };
     in
     ulib.mkStandaloneFlake {
       inherit self;
@@ -36,10 +47,8 @@
       # `zipinfo` is unzip's argv[0] self-dispatch, so it's an alias of unzip.
       engine = "unpin-llvm";
       multicall = {
-        programs = [
-          { name = "unzip"; aliases = [ "zipinfo" ]; }
-          { name = "funzip"; }
-        ];
+        inherit programs;
+        windowsTable = winTable;
       };
       # linux + darwin both self-fold through the engine (bitcode module), like
       # coreutils — no hand-rolled ld-r/objcopy fold (that recipe is ELF-only
@@ -95,6 +104,6 @@
           });
         in
         import ./multicall.nix { lib = pkgs.lib // ulib; }
-          { inherit pkgs; unzip = cosmoUnzip; };
+          { inherit pkgs winTable; unzip = cosmoUnzip; };
     };
 }

@@ -15,7 +15,7 @@ Run a program with [unpin](https://github.com/unpins/unpin):
 
 ```bash
 unpin unzip archive.zip
-unpin unzip zipinfo archive.zip
+unpin unzip --unpin-program=zipinfo archive.zip
 ```
 
 To install the programs onto your PATH:
@@ -30,6 +30,7 @@ unpin install unzip
 
 The man pages for `unzip`, `funzip` and `zipinfo` are embedded in the binary;
 read one with `unpin man unzip`, e.g. `unpin man unzip zipinfo`.
+
 ## Build locally
 
 ```bash

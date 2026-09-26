@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [6.0-2] - 2026-09-26
+
 ### Fixed
 
 - On Windows, `--unpin-program=zipinfo` (and `funzip`) now selects that program.

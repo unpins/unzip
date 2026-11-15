@@ -55,6 +55,7 @@
       # and doesn't port to Mach-O). Windows still uses ./multicall.nix.
       build = pkgs:
         pkgs.pkgsStatic.unzip.overrideAttrs (o: {
+          doCheck = pkgs.stdenv.buildPlatform.canExecute pkgs.stdenv.hostPlatform;
           # Force the C CRC on every arch. unzip's `generic` target runs
           # unix/configure, which on i386/i686 detects gas and selects the i386
           # CRC asm (sets `-DASM_CRC` + `CRCA_O=crc_gcc.o`). That asm's

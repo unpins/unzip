@@ -1,15 +1,13 @@
+# Windows (cosmo) only: Linux and macOS fold through the engine instead.
+#
 # Info-ZIP `unzip` ships several executables, but only two are distinct
 # programs: `unzip` (extract; also serves `zipinfo` — zipinfo.o is part of
 # unzip's object set and unzip dispatches on argv[0]) and `funzip` (filter a
-# single member to stdout). The shipped `zipinfo` binary is literally a
-# hardlink of `unzip`; `zipgrep` is a /bin/sh wrapper (dropped — needs an
-# external shell + grep); `unzipsfx` is a self-extracting stub you concatenate
-# with a zip, which is meaningless for a single multicall binary that already
-# carries an appended unpin ZIP (dropped).
+# single member to stdout). `zipgrep` is a /bin/sh wrapper and `unzipsfx` a
+# self-extracting stub; neither is shipped.
 #
-# So we post-link `unzip` + `funzip` into one multicall binary at
-# $out/bin/unzip and expose `funzip` + `zipinfo` as argv[0]-dispatch UNPIN_META
-# aliases (zipinfo routes to unzip's main, which self-detects via argv[0]).
+# So we post-link `unzip` + `funzip` into one multicall binary and expose
+# `funzip` + `zipinfo` as UNPIN_META aliases (withAliases).
 #
 # Same ld-r + prefix-rename recipe as zip/multicall.nix: the two programs share
 # function names (globals.o vs globalsf.o, inflate.o vs inflatef.o, …) so a
@@ -19,12 +17,8 @@
 # relocations that reference them), making each partial self-contained.
 #
 # bzip2 support is kept (`-DUSE_BZIP2`); the nixpkgs unzip derivation sets
-# `NIX_LDFLAGS=-lbz2`, so the cc-wrapper folds static libbz2 into our final
-# link automatically. Large-file support is already forced by the nixpkgs
-# build (CF gets -DLARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64), so no extra flags.
-#
-# Shared by the native `build` (pkgsStatic ELF / Mach-O) and `windowsBuild`
-# (Cosmopolitan APE) paths.
+# `NIX_LDFLAGS=-lbz2`, so the cc-wrapper folds static libbz2 into the final
+# link. Large-file support comes from the nixpkgs build's CF.
 { lib }:
 { pkgs, unzip, winTable }:
 let

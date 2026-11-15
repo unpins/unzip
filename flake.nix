@@ -8,12 +8,11 @@
 
   inputs.unpins-lib.url = "github:unpins/nix-lib";
 
-  # Info-ZIP unzip: post-link `unzip` + `funzip` into one multicall binary
-  # (`funzip`/`zipinfo` are argv[0]-dispatch UNPIN_META aliases; zipinfo is
-  # served by unzip itself). See ./multicall.nix. Windows goes through
-  # Cosmopolitan: the unix/Makefile is Unix-only (needs <sys/ioctl.h> etc.) and
-  # the win32 makefile is a separate port. The nixpkgs unzip carries the full
-  # CVE-patch stack, which we inherit.
+  # Info-ZIP unzip as one binary answering to unzip, funzip and zipinfo.
+  # Linux and macOS fold through the engine; Windows goes through Cosmopolitan
+  # with the hand fold in ./multicall.nix. Cosmo, not mingw, because it reuses
+  # nixpkgs' recipe (unix/Makefile and its CVE patches); Info-ZIP's win32 port
+  # is a separate makefile tree that recipe never drives.
   outputs = { self, unpins-lib }:
     let
       ulib = unpins-lib.lib;
@@ -32,10 +31,8 @@
     ulib.mkStandaloneFlake {
       inherit self;
       name = "unzip";
-      # No winManRoot: the shared multicall.nix installPhase curates the man to
-      # the three shipped applets (unzip/funzip/zipinfo, dropping unzipsfx.1/
-      # zipgrep.1) into $out/share/man on EVERY target — the cosmo .exe included
-      # — so each build harvests its OWN man, no graft.
+      # No winManRoot: each target curates its own man to the three shipped
+      # pages (`build`'s postInstall, multicall.nix's installPhase), no graft.
       smoke = [ "-v" ];
       smokePattern = "Info-ZIP";
 

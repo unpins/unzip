@@ -52,15 +52,18 @@ The [Releases](https://github.com/unpins/unzip/releases) page has standalone bin
 
 ## Build notes
 
-- Single multicall binary. `funzip` (pipe filter) and `zipinfo` (archive
-  listing) dispatch by `argv[0]`; `zipinfo` is served by `unzip` itself.
-  Dropped: `zipgrep` (a `/bin/sh` wrapper) and `unzipsfx` (a self-extracting
-  stub you concatenate with a zip — incompatible with a single binary); their
-  man pages are curated out too, so only `unzip`/`funzip`/`zipinfo` pages embed.
-- bzip2-compressed entries are supported (static libbz2 folded in).
+- One binary for `unzip`, `funzip` (pipe filter) and `zipinfo` (archive
+  listing). Not included: `zipgrep` (a `/bin/sh` wrapper) and `unzipsfx` (a
+  self-extracting stub you concatenate with a zip, which a single binary cannot
+  be); their man pages are left out too.
+- bzip2-compressed entries are supported.
 - Built from the nixpkgs unzip, so the full upstream CVE-patch stack is included.
-- **Tests:** Info-ZIP unzip ships no automated `make check` suite, so there is nothing to wire; the release smoke test runs `unzip -v`.
+- Non-ASCII file names extract correctly, but listings (`unzip -l`, `zipinfo`)
+  show them with `?`, as the nixpkgs build does.
+- **Tests:** unzip's `make check` runs on native builds (0 failures under
+  static-musl) and is skipped on cross targets the build host can't execute.
 - **Windows** is built with [Cosmopolitan](https://github.com/jart/cosmopolitan)
-  rather than mingw: Info-ZIP's `unix/Makefile` is Unix-only. (One Cosmopolitan
-  fixup: force-include `<utime.h>` so timestamp restoration compiles.)
-
+  rather than mingw, so it uses the same nixpkgs recipe and CVE patches as
+  Linux and macOS; Info-ZIP's Windows port is a separate build that recipe does
+  not cover. Names (CJK included), timestamps and the read-only attribute are
+  restored on extraction.

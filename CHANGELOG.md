@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Changed
+
+- unzip's `make check` now runs on every native build, so a regression fails
+  the build instead of shipping.
+
 ## [6.0-2] - 2026-09-26
 
 ### Fixed

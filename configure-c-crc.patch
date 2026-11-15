@@ -1,0 +1,24 @@
+Never select the i386 CRC assembly; crc32.c supplies the CRC and its table
+on every arch.
+
+unix/configure picks crc_i386.S (`-DASM_CRC`, CRCA_O=crc_gcc.o) when it finds
+gas on i386/i686. That asm references `get_crc_table`, which the engine's
+bitcode fold internalises (only the external asm uses it), so the i686 link
+dies with `undefined symbol: get_crc_table`. The target cannot be singled out
+(the engine builds i686 on an x86_64 host whose hostPlatform reports neither
+i686 nor isLinux), and the C CRC is correct everywhere; on other arches the
+crc_i386.S probe already fails, so this is a no-op there.
+
+--- a/unix/configure
++++ b/unix/configure
+@@ -156,8 +156,8 @@
+   if test ! -s _crc_i386.s || grep error < _crc_i386.s > /dev/null; then
+     :
+   elif eval "$CC -c _crc_i386.s >/dev/null 2>/dev/null" && [ -f _crc_i386.o ]; then
+-    CFLAGSR="${CFLAGSR} -DASM_CRC"
+-    CRC32OA="crc_gcc.o"
++    :
++    CRC32OA=""
+     echo "int foo() { return 0;}" > conftest.c
+     $CC -c conftest.c >/dev/null 2>/dev/null
+     echo Check if compiler generates underlines

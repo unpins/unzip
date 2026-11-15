@@ -38,8 +38,8 @@ let
       mkdir -p multicall
 
       # CRCA_O (assembler-CRC object) is the one configure-variable object;
-      # read it from the `flags` file unix/configure writes (empty on our
-      # targets — C CRC). Everything else in OBJS/OBJF is static. M=unix.
+      # read it from the `flags` file unix/configure writes (empty under
+      # cosmo, which has no i386 asm). Everything else in OBJS/OBJF is static.
       CRCA_O=""
       [ -f flags ] && CRCA_O=$(sed -n 's/.*CRCA_O="\([^"]*\)".*/\1/p' flags)
 
@@ -48,12 +48,7 @@ let
       TOOLOBJS[funzip]="funzip.o crc32.o $CRCA_O cryptf.o globalsf.o inflatef.o ttyiof.o"
       TOOLS="unzip funzip"
 
-      # Mach-O leads C symbols with '_'; detect once from unzip.o's `main`.
-      if $NM --defined-only unzip.o 2>/dev/null | awk '$3=="_main"{f=1} END{exit !f}'; then
-        up=_
-      else
-        up=""
-      fi
+      up=""
 
       for t in $TOOLS; do
         real=""
@@ -78,16 +73,14 @@ let
       done
 
       # applets.list + dispatcher.c, both rendered from the ONE table the flake
-      # declares. The table is many-to-one, so `zipinfo` is an extra row at
-      # unzip's symbol: argv[0] reaches unzip's main exactly as before (it
-      # self-detects) and `--unpin-program=zipinfo` reaches it too. `unzip` is
-      # itself a program, so the table's naming rule runs it on a bare
-      # invocation — the same rule the native fold reads, not a second copy.
+      # declares. `zipinfo` is an extra row at unzip's symbol: unzip's main
+      # self-detects it, and `--unpin-program=zipinfo` reaches it too. `unzip`
+      # is itself a program, so a bare invocation runs it.
 ${winTable.emit { }}
       $CC -O2 -c -o multicall/dispatcher.o multicall/dispatcher.c
 
-      # Final link: cc-wrapper adds -static (pkgsStatic/cosmo) and -lbz2
-      # (NIX_LDFLAGS) automatically. One pass — partials are self-contained.
+      # Final link: the cosmo cc-wrapper adds -static and -lbz2 (NIX_LDFLAGS)
+      # automatically. One pass — partials are self-contained.
       $CC multicall/unzip.o multicall/funzip.o multicall/dispatcher.o \
         -o multicall/unzip
       [ -f multicall/unzip ] || mv multicall/unzip.exe multicall/unzip

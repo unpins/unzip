@@ -28,9 +28,6 @@
 { lib }:
 { pkgs, unzip, winTable }:
 let
-  isDarwin = pkgs.stdenv.hostPlatform.isDarwin or false;
-  isWindows = pkgs.stdenv.hostPlatform.isWindows or false;
-
   multicall = unzip.overrideAttrs (old: {
     pname = "unzip-multi";
     outputs = [ "out" ];
@@ -120,10 +117,4 @@ ${winTable.emit { }}
     }
     multicall;
 in
-if isWindows
-then aliased.overrideAttrs (o: {
-  postFixup = (o.postFixup or "") + ''
-    [ -f "$out/bin/unzip" ] && mv "$out/bin/unzip" "$out/bin/unzip.exe"
-  '';
-})
-else aliased
+aliased

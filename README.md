@@ -62,8 +62,6 @@ The [Releases](https://github.com/unpins/unzip/releases) page has standalone bin
   show them with `?`, as the nixpkgs build does.
 - **Tests:** unzip's `make check` runs on native builds (0 failures under
   static-musl) and is skipped on cross targets the build host can't execute.
-- **Windows** is built with [Cosmopolitan](https://github.com/jart/cosmopolitan)
-  rather than mingw, so it uses the same nixpkgs recipe and CVE patches as
-  Linux and macOS; Info-ZIP's Windows port is a separate build that recipe does
-  not cover. Names (CJK included), timestamps and the read-only attribute are
-  restored on extraction.
+- **Windows** is built with Info-ZIP's own MinGW makefile (`win32/Makefile.gcc`)
+  and the same nixpkgs CVE patches. Names (CJK included), timestamps and the
+  read-only attribute are restored on extraction.

@@ -1,0 +1,19 @@
+globals.h defines __G as a macro, and the win32 sources include <windows.h>
+after it; current mingw-w64 <winnt.h> includes <x86intrin.h>, whose
+prototypes use __G as a parameter name. On MinGW, include <windows.h> from
+win32/w32cfg.h, which unzpriv.h reads before globals.h.
+
+--- a/win32/w32cfg.h
++++ b/win32/w32cfg.h
+@@ -135,6 +135,11 @@
+ #ifndef WIN32_LEAN_AND_MEAN
+ #  define WIN32_LEAN_AND_MEAN
+ #endif
++#ifdef __MINGW32__
++   /* Before globals.h defines __G/__G__: current <winnt.h> pulls in clang's
++      <x86intrin.h>, whose prototypes name parameters __A..__H. */
++#  include <windows.h>
++#endif
+ 
+ #if defined(__FILEIO_C)
+ #  ifndef __CYGWIN__

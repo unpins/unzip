@@ -1,0 +1,26 @@
+Embed a manifest with UTF-8 as the process code page (Windows 10 1903+).
+Info-ZIP unzip reaches file names through the ANSI APIs, so a name outside the system
+code page is otherwise escaped (#Uxxxx) or mangled.
+
+diff -uN a/win32/unzip.manifest b/win32/unzip.manifest
+--- a/win32/unzip.manifest
++++ b/win32/unzip.manifest
+@@ -0,0 +1,8 @@
++<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
++<assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
++	<application xmlns="urn:schemas-microsoft-com:asm.v3">
++		<windowsSettings>
++			<activeCodePage xmlns="http://schemas.microsoft.com/SMI/2019/WindowsSettings">UTF-8</activeCodePage>
++		</windowsSettings>
++	</application>
++</assembly>
+diff -uN a/win32/winapp.rc b/win32/winapp.rc
+--- a/win32/winapp.rc
++++ b/win32/winapp.rc
+@@ -48,3 +48,6 @@
+ #endif
+     END
+ END
++
++/* 1 = CREATEPROCESS_MANIFEST_RESOURCE_ID, 24 = RT_MANIFEST */
++1 24 "win32/unzip.manifest"
